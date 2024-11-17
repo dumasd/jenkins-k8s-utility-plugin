@@ -1,0 +1,73 @@
+/* common css */
+.descriptions_item_container {
+    display: flex;
+
+    .descriptions_item_label {
+        margin-right: 10px;
+        display: inline-flex;
+        align-items: baseline;
+    }
+
+}
+
+.form-item-100 {
+    max-width: 100%;
+    margin-bottom: 0.1rem;
+}
+
+.form-item-70 {
+    max-width: 70%;
+    margin-bottom: 0.1rem;
+}
+
+
+.operate-form {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+
+
+    .item {
+        margin-right: 0.5rem;
+        margin-bottom: 1rem;
+        min-width: 20%;
+    }
+
+    .item-10 {
+        margin-right: 0.5rem;
+        margin-bottom: 1rem;
+        min-width: 10%;
+    }
+
+    .item-20 {
+        margin-right: 0.5rem;
+        margin-bottom: 1rem;
+        min-width: 20%;
+    }
+
+    .form-25 {
+        margin-right: 0.5rem;
+        margin-bottom: 1rem;
+        min-width: 25%;
+    }
+
+    .item-45 {
+        margin-right: 0.5rem;
+        margin-bottom: 1rem;
+        min-width: 40%;
+    }
+}
+
+.code-editor {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 5px;
+
+    .code-item {
+        width: 100%;
+        height: 355px
+    }
+}

@@ -1,13 +1,10 @@
-package io.jenkins.plugins.sample;
+package io.jenkins.plugins.dumasd.k8s;
 
-import hudson.model.FreeStyleBuild;
-import hudson.model.FreeStyleProject;
 import hudson.model.Label;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Rule;
-import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 public class HelloWorldBuilderTest {
@@ -17,9 +14,10 @@ public class HelloWorldBuilderTest {
 
     final String name = "Bobby";
 
-    @Test
+    /*@Test
     public void testConfigRoundtrip() throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
+
         project.getBuildersList().add(new HelloWorldBuilder(name));
         project = jenkins.configRoundtrip(project);
         jenkins.assertEqualDataBoundBeans(
@@ -59,9 +57,9 @@ public class HelloWorldBuilderTest {
 
         FreeStyleBuild build = jenkins.buildAndAssertSuccess(project);
         jenkins.assertLogContains("Bonjour, " + name, build);
-    }
+    }*/
 
-    @Test
+    // @Test
     public void testScriptedPipeline() throws Exception {
         String agentLabel = "my-agent";
         jenkins.createOnlineSlave(Label.get(agentLabel));

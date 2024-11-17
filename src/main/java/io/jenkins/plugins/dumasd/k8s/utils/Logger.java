@@ -1,7 +1,6 @@
 package io.jenkins.plugins.dumasd.k8s.utils;
 
 import hudson.model.TaskListener;
-
 import java.io.PrintStream;
 
 /**

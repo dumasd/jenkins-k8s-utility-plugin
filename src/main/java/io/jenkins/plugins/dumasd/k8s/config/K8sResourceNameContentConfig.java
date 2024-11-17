@@ -5,15 +5,13 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import io.jenkins.plugins.dumasd.k8s.utils.Utils;
+import java.io.Serializable;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-
-import java.io.Serializable;
-
 
 /**
  * @author Bruce.Wu
@@ -22,17 +20,22 @@ import java.io.Serializable;
 @Setter
 @Getter
 @ToString
-public class K8sResourceNameContentConfig extends AbstractDescribableImpl<K8sResourceNameContentConfig> implements Serializable {
+public class K8sResourceNameContentConfig extends AbstractDescribableImpl<K8sResourceNameContentConfig>
+        implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 505596625811177193L;
     /**
      * namespace
      */
     private String namespace;
     /**
-     * 资源类型 destinationrules.networking.istio.io
+     * 资源apiVersion networking.istio.io/v1beta1
      */
-    private String resource;
+    private String apiVersion;
+    /**
+     * 资源kind VirtualService
+     */
+    private String kind;
     /**
      * 资源名称 account-destination-rule
      */
@@ -43,8 +46,9 @@ public class K8sResourceNameContentConfig extends AbstractDescribableImpl<K8sRes
     private String content;
 
     @DataBoundConstructor
-    public K8sResourceNameContentConfig(String resource, String name) {
-        this.resource = resource;
+    public K8sResourceNameContentConfig(String apiVersion, String kind, String name) {
+        this.apiVersion = apiVersion;
+        this.kind = kind;
         this.name = name;
     }
 
@@ -56,6 +60,14 @@ public class K8sResourceNameContentConfig extends AbstractDescribableImpl<K8sRes
     @DataBoundSetter
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getApiVersionKind() {
+        return apiVersion + "-" + kind;
+    }
+
+    public String getApiVersionKindId() {
+        return Utils.getSimpleUUID(apiVersion + "|" + kind);
     }
 
     @Extension

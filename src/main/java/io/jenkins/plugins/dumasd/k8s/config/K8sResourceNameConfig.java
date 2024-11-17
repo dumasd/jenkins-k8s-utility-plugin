@@ -5,15 +5,13 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import io.jenkins.plugins.dumasd.k8s.utils.Utils;
+import java.io.Serializable;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-
-import java.io.Serializable;
-
 
 /**
  * @author Bruce.Wu
@@ -24,23 +22,28 @@ import java.io.Serializable;
 @ToString
 public class K8sResourceNameConfig extends AbstractDescribableImpl<K8sResourceNameConfig> implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 7964149685482666931L;
     /**
      * namespace
      */
     private String namespace;
     /**
-     * 资源类型 destinationrules.networking.istio.io
+     * 资源apiVersion networking.istio.io/v1beta1
      */
-    private String resource;
+    private String apiVersion;
+    /**
+     * 资源kind VirtualService
+     */
+    private String kind;
     /**
      * 资源名称 account-destination-rule
      */
     private String name;
 
     @DataBoundConstructor
-    public K8sResourceNameConfig(String resource, String name) {
-        this.resource = resource;
+    public K8sResourceNameConfig(String apiVersion, String kind, String name) {
+        this.apiVersion = apiVersion;
+        this.kind = kind;
         this.name = name;
     }
 
@@ -65,6 +68,5 @@ public class K8sResourceNameConfig extends AbstractDescribableImpl<K8sResourceNa
             }
             return FormValidation.ok();
         }
-
     }
 }

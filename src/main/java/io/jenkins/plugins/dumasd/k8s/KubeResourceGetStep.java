@@ -1,14 +1,25 @@
 package io.jenkins.plugins.dumasd.k8s;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.model.Descriptor;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.util.ListBoxModel;
 import io.jenkins.plugins.dumasd.k8s.config.K8sResourceNameConfig;
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import jenkins.model.Jenkins;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.java.Log;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
@@ -16,28 +27,24 @@ import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 /**
  * @author Bruce.Wu
  * @date 2024-11-14
  */
+@Log
 @Setter
 @Getter
 @ToString
 public class KubeResourceGetStep extends Step implements Serializable {
-    private static final long serialVersionUID = 1L;
 
+    private static final long serialVersionUID = 31450466576041991L;
     private String credentialsId;
     private String serverUrl;
     private String caCertificate;
     private List<K8sResourceNameConfig> items;
 
     @DataBoundConstructor
-    public KubeResourceGetStep(@NonNull String credentialsId, List<K8sResourceNameConfig> items) {
+    public KubeResourceGetStep(@NonNull String credentialsId, @NonNull List<K8sResourceNameConfig> items) {
         this.credentialsId = credentialsId;
         this.items = items;
     }
@@ -52,11 +59,13 @@ public class KubeResourceGetStep extends Step implements Serializable {
         this.caCertificate = caCertificate;
     }
 
+    public Descriptor<K8sResourceNameConfig> getItemDescriptor() {
+        return Jenkins.get().getDescriptorByType(K8sResourceNameConfig.DescriptorImpl.class);
+    }
+
     @Override
     public StepExecution start(StepContext context) throws Exception {
-        // [ { 'resource': '', 'name': '', 'namespace': '', 'content': '' }, {  'resource': '', 'name': '', 'namespace': '' , 'content': '' } ]
-
-        return null;
+        return new KubeResourceGetStepExecution(context, this);
     }
 
     @Extension
@@ -79,6 +88,16 @@ public class KubeResourceGetStep extends Step implements Serializable {
         @Override
         public String getFunctionName() {
             return "kubeResourceGet";
+        }
+
+        public ListBoxModel doFillCredentialsIdItems() {
+            ListBoxModel items = new ListBoxModel();
+            items.add("Select a credential", "");
+            for (StandardCredentials c : CredentialsProvider.lookupCredentialsInItemGroup(
+                    StandardCredentials.class, Jenkins.get(), null, Collections.emptyList())) {
+                items.add(c.getId(), c.getId());
+            }
+            return items;
         }
     }
 }

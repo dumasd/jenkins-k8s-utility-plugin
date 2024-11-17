@@ -1,0 +1,184 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+         xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <link rel="stylesheet" href="${rootURL}/plugin/jenkins-k8s-utility-plugin/css/common.css"
+          type="text/css"/>
+
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.17/lib/codemirror.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.17/addon/lint/lint.css"/>
+
+    <!-- 信息暂存区 -->
+    <div style="display: none;">
+        <input id="kubeResourceTypes" type="hidden"
+               value="${it.getResourceTypesJson()}"
+               disabled="disabled"/>
+    </div>
+
+    <div name="parameter" id="kubeResourceEditMain" style="margin-top: 5px;">
+        <input type="hidden" name="name" value="${h.escape(it.name)}"/>
+
+        <!-- Select workloads -->
+        <f:entry title="Select:" class="form-item-100">
+            <select name="workloads" id="kubeWorkloadSelect" multiple="multiple" size="${it.getKeySelectSize()}"
+                    onchange="updateSelectedKubeWorkloads(this)">
+                <j:forEach items="${it.getKeys()}" var="key">
+                    <f:option value="${key}">${key}</f:option>
+                </j:forEach>
+            </select>
+        </f:entry>
+
+        <!-- Selected workload tabs -->
+        <div id="selectedKubeWorkloadsTab" class="tabBar">
+        </div>
+
+        <div name="value" id="kubeResourceEditPanes">
+            <j:forEach items="${it.getKeys()}" var="key">
+                <div name="${key}" id="kubeResource-${key}" style="display: none;">
+                    <j:forEach items="${it.getItems(key)}" var="item">
+                        <div name="${item.getApiVersionKindId()}">
+                            <input name="apiVersion"
+                                   id="kubeResourceApiVersion-${key}-${item.getApiVersionKindId()}" type="hidden"
+                                   value="${item.getApiVersion()}"
+                                   disabled="disabled"/>
+                            <input name="kind" id="kubeResourceKind-${key}-${item.getApiVersionKindId()}" type="hidden"
+                                   value="${item.getKind()}"
+                                   disabled="disabled"/>
+                            <input name="name" id="kubeResourceName-${key}-${item.getApiVersionKindId()}" type="hidden"
+                                   value="${item.getName()}"
+                                   disabled="disabled"/>
+                            <input name="namespace" id="kubeResourceNamespace-${key}-${item.getApiVersionKindId()}"
+                                   type="hidden"
+                                   value="${item.getNamespace()}"
+                                   disabled="disabled"/>
+                            <input name="content" id="kubeResourceContent-${key}-${item.getApiVersionKindId()}"
+                                   type="hidden"
+                                   value="${item.getContent()}"
+                                   disabled="disabled"/>
+                        </div>
+                    </j:forEach>
+                </div>
+            </j:forEach>
+        </div>
+
+        <div class="operate-form">
+            <input id="selectAllBtn" type="button" value="Select ALL" class="form-item-1"/>
+        </div>
+
+        <div class="operate-form" style="margin-top: 10px">
+            <j:forEach items="${it.getResourceTypes()}" var="item">
+                <div style="width:90%">
+                    <span>${item.getApiVersion()} ${item.getKind()}</span>
+                    <div id="kubeResourceEditor-${item.getId()}" style="width:100%">
+                    </div>
+                </div>
+            </j:forEach>
+        </div>
+
+    </div>
+
+    <script src="https://unpkg.com/codemirror@5.65.17/lib/codemirror.js"/>
+    <script src="https://unpkg.com/codemirror@5.65.17/mode/yaml/yaml.js"/>
+    <script src="https://unpkg.com/codemirror@5.65.17/addon/lint/lint.js"/>
+    <script src="https://unpkg.com/js-yaml@4.1.0/dist/js-yaml.min.js"/>
+    <script src="https://unpkg.com/codemirror@5.65.17/addon/lint/yaml-lint.js"/>
+
+    <script type="text/javascript">
+        <![CDATA[
+        var BASE_URL = '${rootURL}/descriptorByName/io.jenkins.plugins.dumasd.k8s.KubeResourceAlterParameterDefinition'
+
+        const editorMap = {};
+
+        function onTabClick(option) {
+            console.log("TabClick option:", option);
+            const parentDiv = document.getElementById("kubeResource-" + option);
+            const childDivs = parentDiv.children;
+            for (let i = 0; i < childDivs.length; i++) {
+                const kubeResource = childDivs[i];
+                const apiVersionKindId = kubeResource.getAttribute("name");
+                const editor = editorMap[apiVersionKindId];
+
+                const contentInput = document.getElementById("kubeResourceContent-" + option + "-" + apiVersionKindId);
+                editor.currentKey = option;
+                editor.setValue(contentInput.value);
+            }
+        }
+
+        function updateSelectedKubeWorkloads(select) {
+            const tabBar = document.querySelector("#selectedKubeWorkloadsTab");
+            const optionValues = Array.from(select.selectedOptions).map(e => e.value)
+            const optionNames = Array.from(select.selectedOptions).map(e => e.innerText)
+            tabBar.innerHTML = ''
+            optionValues.forEach((option, index) => {
+                const tab = document.createElement("div");
+                tab.className = "tab";
+                if (index === 0) {
+                    tab.classList.add("active");
+                }
+                // 创建监听
+                tab.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    document.querySelectorAll(".tab").forEach(tab => {
+                        tab.classList.remove("active");
+                    });
+                    tab.classList.add("active");
+                    onTabClick(option);
+                });
+
+                const tabLink = document.createElement("a");
+                tabLink.setAttribute("href", "#");
+                tabLink.innerText = optionNames[index];
+                tab.append(tabLink);
+                tabBar.append(tab);
+            });
+
+            if (optionValues.length > 0) {
+                const option = optionValues[0];
+                onTabClick(option);
+            }
+        }
+
+        const resourceTypesInput = document.querySelector("#kubeResourceTypes");
+        const resourceTypes = JSON.parse(resourceTypesInput.value);
+        for (const i in resourceTypes) {
+            const apiVersionKindId = resourceTypes[i].id;
+            const editor = CodeMirror(document.getElementById("kubeResourceEditor-" + apiVersionKindId), {
+                value: '',
+                lineNumbers: true,
+                gutters: ["CodeMirror-lint-markers"],
+                lint: true,
+                mode: 'yaml',
+                styleActiveLine: true,
+                highlightDifferences: true,
+                connect: "align"
+            });
+
+            editor.setSize(null, "320px");
+            editor.apiVersionKindId = apiVersionKindId;
+            editor.on('change', function (cm, changeObj) {
+                if (changeObj.origin === 'setValue') {
+                    cm.clearHistory();
+                    return;
+                }
+                const contentInput = document.getElementById("kubeResourceContent-" + cm.currentKey + "-" + cm.apiVersionKindId);
+                contentInput.value = cm.getValue();
+            });
+            editorMap[apiVersionKindId] = editor;
+        }
+
+        const selectAllBtn = document.getElementById("selectAllBtn");
+        selectAllBtn.addEventListener("click", function () {
+            const kubeWorkloadSelect = document.querySelector("#kubeWorkloadSelect");
+            for (let option of kubeWorkloadSelect.options) {
+                option.selected = true;
+            }
+            updateSelectedKubeWorkloads(kubeWorkloadSelect);
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const kubeWorkloadSelect = document.querySelector("#kubeWorkloadSelect");
+            kubeWorkloadSelect.disabled = false;
+        });
+        ]]>
+    </script>
+
+</j:jelly>
