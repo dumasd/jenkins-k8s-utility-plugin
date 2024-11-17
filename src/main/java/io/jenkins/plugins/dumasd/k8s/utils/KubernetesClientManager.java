@@ -29,10 +29,7 @@ public class KubernetesClientManager {
 
     public KubernetesClient getOrCreate(String serverUrl, String caCertificate, KubernetesAuth auth)
             throws KubernetesAuthException {
-        boolean skipTlsVerify = true;
-        if (StringUtils.isBlank(caCertificate)) {
-            skipTlsVerify = false;
-        }
+        boolean skipTlsVerify = StringUtils.isBlank(caCertificate);
         ConfigBuilder builder;
 
         if (StringUtils.isBlank(serverUrl)) {
