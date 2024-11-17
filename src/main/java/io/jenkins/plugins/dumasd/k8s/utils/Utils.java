@@ -10,6 +10,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.ItemGroup;
 import hudson.security.ACL;
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.UUID;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
@@ -44,7 +45,8 @@ public final class Utils {
     }
 
     public static String getSimpleUUID(String from) {
-        String uuid = UUID.nameUUIDFromBytes(from.getBytes()).toString();
+        String uuid =
+                UUID.nameUUIDFromBytes(from.getBytes(StandardCharsets.UTF_8)).toString();
         return uuid.replace("-", "");
     }
 
