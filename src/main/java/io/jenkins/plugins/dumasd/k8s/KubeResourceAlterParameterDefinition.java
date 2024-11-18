@@ -5,11 +5,11 @@ import hudson.Extension;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
 import io.jenkins.plugins.dumasd.k8s.config.K8sResourceNameContentConfig;
-import io.jenkins.plugins.dumasd.k8s.model.K8sResourceType;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,9 +20,16 @@ import lombok.ToString;
 import lombok.extern.java.Log;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.Velocity;
+import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.exception.ResourceNotFoundException;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 /**
  * @author Bruce.Wu
@@ -53,19 +60,6 @@ public class KubeResourceAlterParameterDefinition extends ParameterDefinition {
 
     public List<K8sResourceNameContentConfig> getItems(String key) {
         return itemsMap.get(key);
-    }
-
-    public Set<K8sResourceType> getResourceTypes() {
-        Set<K8sResourceType> set = new LinkedHashSet<>();
-        itemsMap.values()
-                .forEach(items -> items.forEach(e -> set.add(new K8sResourceType(e.getApiVersion(), e.getKind()))));
-        return set;
-    }
-
-    public String getResourceTypesJson() {
-        JSONArray jsonArray = new JSONArray();
-        jsonArray.addAll(getResourceTypes());
-        return jsonArray.toString();
     }
 
     @Override
@@ -130,14 +124,45 @@ public class KubeResourceAlterParameterDefinition extends ParameterDefinition {
     @Symbol("kubeResourceAlter")
     public static class DescriptorImpl extends ParameterDescriptor {
 
+        private VelocityEngine velocityEngine;
+
         public DescriptorImpl() {
             super(KubeResourceAlterParameterDefinition.class);
+            this.velocityEngine = new VelocityEngine();
+            velocityEngine.setProperty(Velocity.INPUT_ENCODING, StandardCharsets.UTF_8.name());
+            velocityEngine.setProperty(Velocity.FILE_RESOURCE_LOADER_CACHE, true); // 使用缓存
+            velocityEngine.setProperty(
+                    "resource.loader.file.class",
+                    "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+            velocityEngine.init();
         }
 
         @NonNull
         @Override
         public String getDisplayName() {
             return "Kubernetes Resource Alter Parameter";
+        }
+
+        @JavaScriptMethod(name = "getTemplate")
+        public String doGetTemplate(
+                @QueryParameter("apiVersion") String apiVersion,
+                @QueryParameter("kind") String kind,
+                @QueryParameter("name") String name,
+                @QueryParameter("namespace") String namespace)
+                throws Exception {
+            String templateFileName = kind.toLowerCase() + ".yaml.vm";
+            try {
+                Template template =
+                        this.velocityEngine.getTemplate("io/jenkins/plugins/dumasd/k8s/templates/" + templateFileName);
+                StringWriter stringWriter = new StringWriter();
+                VelocityContext ctx = new VelocityContext();
+                ctx.put("name", name);
+                ctx.put("namespace", namespace);
+                template.merge(ctx, stringWriter);
+                return stringWriter.toString();
+            } catch (ResourceNotFoundException e) {
+                return "";
+            }
         }
     }
 }

@@ -1,12 +1,14 @@
 package io.jenkins.plugins.dumasd.k8s.config;
 
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import io.jenkins.plugins.dumasd.k8s.utils.Utils;
 import java.io.Serializable;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import lombok.ToString;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -41,10 +43,15 @@ public class K8sResourceNameConfig extends AbstractDescribableImpl<K8sResourceNa
     private String name;
 
     @DataBoundConstructor
-    public K8sResourceNameConfig(String apiVersion, String kind, String name) {
+    public K8sResourceNameConfig(@NonNull String apiVersion, @NonNull String kind, @NonNull String name) {
         this.apiVersion = apiVersion;
         this.kind = kind;
         this.name = name;
+    }
+
+    public String getResourceId() {
+        String str = String.format("%s|%s|%s|%s", apiVersion, kind, name, Util.fixNull(namespace));
+        return Utils.getSimpleUUID(str);
     }
 
     @DataBoundSetter

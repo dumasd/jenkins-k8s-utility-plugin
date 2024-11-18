@@ -26,48 +26,21 @@
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-
-
-    .item {
-        margin-right: 0.5rem;
-        margin-bottom: 1rem;
-        min-width: 20%;
-    }
-
-    .item-10 {
-        margin-right: 0.5rem;
-        margin-bottom: 1rem;
-        min-width: 10%;
-    }
-
-    .item-20 {
-        margin-right: 0.5rem;
-        margin-bottom: 1rem;
-        min-width: 20%;
-    }
-
-    .form-25 {
-        margin-right: 0.5rem;
-        margin-bottom: 1rem;
-        min-width: 25%;
-    }
-
-    .item-45 {
-        margin-right: 0.5rem;
-        margin-bottom: 1rem;
-        min-width: 40%;
-    }
+    margin-bottom: 5px;
 }
 
-.code-editor {
-    width: 100%;
-    height: 100%;
+.title-left-btn-right {
     display: flex;
-    flex-direction: column;
-    margin-bottom: 5px;
+    justify-content: space-between; /* 左右分布 */
+    align-items: flex-start; /* 顶边对齐 */
+    margin-right: 10px;
+    margin-bottom: 3px;
+}
 
-    .code-item {
-        width: 100%;
-        height: 355px
-    }
+.editor-operate {
+    width: 90%;
+}
+
+.editor-content {
+    width:100%
 }

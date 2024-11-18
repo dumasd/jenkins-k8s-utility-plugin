@@ -1,6 +1,7 @@
 package io.jenkins.plugins.dumasd.k8s.config;
 
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
@@ -62,12 +63,9 @@ public class K8sResourceNameContentConfig extends AbstractDescribableImpl<K8sRes
         this.content = content;
     }
 
-    public String getApiVersionKind() {
-        return apiVersion + "-" + kind;
-    }
-
-    public String getApiVersionKindId() {
-        return Utils.getSimpleUUID(apiVersion + "|" + kind);
+    public String getResourceId() {
+        String str = String.format("%s|%s|%s|%s", apiVersion, kind, name, Util.fixNull(namespace));
+        return Utils.getSimpleUUID(str);
     }
 
     @Extension
